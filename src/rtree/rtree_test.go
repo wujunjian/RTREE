@@ -9,6 +9,6 @@ func TestRTree(t *testing.T) {
 
 	var a = &RTree{}
 
-	fmt.Println(a)
+	fmt.Println("aaa", a)
 
 }
