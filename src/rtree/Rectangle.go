@@ -72,7 +72,27 @@ func (r Rectangle) getArea() (area float64) {
 	return area
 }
 
-func getUnionRectangleForMany(ins []Rectangle) (out Rectangle) {
+func (r Rectangle) intersectingArea(o Rectangle) float64 {
+	return 0
+}
+
+func (r Rectangle) isIntersection(o Rectangle) bool {
+	return false
+}
+
+func (r Rectangle) isNULL() bool {
+	if len(r.low.data) == 0 {
+		return true
+	}
+	return false
+}
+
+func (r *Rectangle) clean() {
+	r.low.data = nil
+	r.high.data = nil
+}
+
+func getUnionRectangle(ins []Rectangle) (out Rectangle) {
 	if len(ins) == 0 {
 		return
 	}
@@ -80,8 +100,11 @@ func getUnionRectangleForMany(ins []Rectangle) (out Rectangle) {
 	for i, r := range ins {
 		if i == 0 {
 			out = r.clone()
+			continue
 		}
 
-	}
+		out = out.getUnionRectangle(r)
 
+	}
+	return
 }

@@ -27,7 +27,6 @@ func (p Point) clone() Point {
 func (p Point) getFloatCoordinate(index int) float64 {
 	if p.getDimension() > index {
 		return p.data[index]
-	} else {
-		return 0
 	}
+	return 0
 }
