@@ -19,7 +19,7 @@ func (r *Rectangle) init(low *Point, high *Point) {
 
 	for i, d := range low.data {
 		if d > high.getFloatCoordinate(i) {
-			return
+			panic(1)
 		}
 	}
 
@@ -66,18 +66,73 @@ func (r Rectangle) getArea() (area float64) {
 	area = 1
 
 	for i, d := range r.low.data {
-		area *= r.high.getFloatCoordinate(i) - d
+		area *= (r.high.getFloatCoordinate(i) - d)
 	}
 
 	return area
 }
 
-func (r Rectangle) intersectingArea(o Rectangle) float64 {
-	return 0
+// 两个Rectangle相交的面积
+func (r Rectangle) intersectingArea(o Rectangle) (ret float64) {
+	if !r.isIntersection(o) { //不相交
+		return 0
+	}
+	ret = 1
+	for i, lowd := range r.low.data {
+		l1 := lowd
+		h1 := r.high.getFloatCoordinate(i)
+		l2 := o.low.getFloatCoordinate(i)
+		h2 := o.high.getFloatCoordinate(i)
+		if l1 <= l2 && h1 <= h2 {
+			ret *= (h1 - l2)
+		} else if l1 >= l2 && h1 >= h2 {
+			ret *= (h2 - l1)
+		} else if l1 >= l2 && h1 <= h2 {
+			ret *= (h1 - l1)
+		} else if l1 <= l2 && h1 >= h2 {
+			ret *= (h2 - l2)
+		}
+	}
+
+	return
 }
 
+// 判断两个Rectangle是否相交
 func (r Rectangle) isIntersection(o Rectangle) bool {
-	return false
+
+	for i, lowd := range r.low.data {
+		if lowd > o.high.getFloatCoordinate(i) ||
+			r.high.getFloatCoordinate(i) < o.low.getFloatCoordinate(i) {
+			return false
+		}
+	}
+	return true
+}
+
+// 判断rectangle是否包围
+func (r Rectangle) enclosure(o Rectangle) bool {
+	if o.isNULL() {
+		panic(1)
+	}
+
+	if r.getDimension() != o.getDimension() {
+		panic(1)
+	}
+
+	// 只要传入的rectangle有一个维度的坐标越界了就不包含
+	for i := 0; i < r.getDimension(); i++ {
+
+		if o.low.getFloatCoordinate(i) < r.low.getFloatCoordinate(i) ||
+			o.high.getFloatCoordinate(i) > r.high.getFloatCoordinate(i) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (r Rectangle) getDimension() int {
+	return len(r.low.data)
 }
 
 func (r Rectangle) isNULL() bool {
@@ -90,6 +145,13 @@ func (r Rectangle) isNULL() bool {
 func (r *Rectangle) clean() {
 	r.low.data = nil
 	r.high.data = nil
+}
+
+func (r Rectangle) equals(o Rectangle) bool {
+	if r.low.equals(o.low) && r.high.equals(o.high) {
+		return true
+	}
+	return false
 }
 
 func getUnionRectangle(ins []Rectangle) (out Rectangle) {

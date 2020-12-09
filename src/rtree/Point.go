@@ -30,3 +30,17 @@ func (p Point) getFloatCoordinate(index int) float64 {
 	}
 	return 0
 }
+
+func (p Point) equals(o Point) bool {
+	if p.getDimension() != o.getDimension() {
+		return false
+	}
+
+	for i, d := range p.data {
+		if o.data[i] != d {
+			return false
+		}
+	}
+
+	return true
+}
