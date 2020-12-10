@@ -15,11 +15,6 @@ func (r *RTDirNode) init(rtree *RTree, parent IRTNode, level int) {
 	r.RTNode.init(rtree, parent, level)
 }
 
-func (r RTDirNode) getChild(index int) IRTNode {
-
-	return r.children[index]
-}
-
 //@override
 func (r RTDirNode) chooseLeaf(rect Rectangle) *RTDataNode {
 	var index int
@@ -45,7 +40,6 @@ func (r RTDirNode) chooseLeaf(rect Rectangle) *RTDataNode {
 
 	return r.getChild(index).chooseLeaf(rect) // 非叶子节点的chooseLeaf（）实现递归调用
 
-	return &RTDataNode{}
 }
 
 // @param rectangle
@@ -59,9 +53,9 @@ func (r RTDirNode) findLeastOverlap(rect Rectangle) int {
 		node := r.getChild(i)
 		var ol float64 // 用于记录每个孩子的datas数据与传入矩形的重叠面积之和
 
-		for j := 0; j < len(node.datas); j++ {
+		for j := 0; j < node.dataLength(); j++ {
 			// 将传入矩形与各个矩形重叠的面积累加到ol中，得到重叠的总面积
-			ol += rect.intersectingArea(node.datas[j])
+			ol += rect.intersectingArea(node.getData(j))
 		}
 
 		if ol < overlap {
@@ -144,9 +138,39 @@ func (r *RTDirNode) insert(node IRTNode) bool {
 		return false
 	} else { // 非叶子结点需要分裂
 		a := r.splitIndex(node)
+		n := a[0]
+		nn := a[1]
+
+		if r.isRoot() {
+			// 新建根节点，层数加1
+			var newRoot RTDirNode
+			newRoot.init(r.rtree, nil, r.level+1)
+			newRoot.addData(n.getNodeRectangle())
+			newRoot.addData(nn.getNodeRectangle())
+
+			newRoot.children = append(newRoot.children, n, nn)
+
+			n.setParent(&newRoot)
+			nn.setParent(&newRoot)
+
+			r.rtree.setRoot(&newRoot)
+		} else {
+			r.parent.adjustTree(n, nn)
+		}
 	}
 
 	return true
+}
+
+func (r RTDirNode) getChild(index int) IRTNode {
+
+	return r.children[index]
+}
+
+func (r *RTDirNode) delChild(index int) {
+	tmp := r.children[0:index]
+	tmp = append(tmp, r.children[index+1:len(r.children)]...)
+	r.children = tmp
 }
 
 func (r *RTDirNode) splitIndex(node IRTNode) []IRTNode {
@@ -187,4 +211,21 @@ func (r *RTDirNode) splitIndex(node IRTNode) []IRTNode {
 	}
 
 	return []IRTNode{&index1, &index2}
+}
+
+// @Override
+// 寻找叶子
+func (r *RTDirNode) findLeaf(rect Rectangle) *RTDataNode {
+	for i := 0; i < r.usedSpace; i++ {
+		if r.datas[i].enclosure(rect) {
+			r.deleteIndex = i
+
+			leaf := r.children[i].findLeaf(rect) // 递归查找
+			if leaf != nil {
+				return leaf
+			}
+		}
+	}
+
+	return nil
 }

@@ -7,19 +7,25 @@ import (
 
 type IRTNode interface {
 	getParent() IRTNode
+	getChild(int) IRTNode
+	delChild(int)
 	setParent(IRTNode)
 	isRoot() bool
 	isIndex() bool
 	isLeaf() bool
 	addData(Rectangle)
+	dataLength() int
+	getData(int) Rectangle
 	deleteData(int)
-	condenseTree([]RTNode)
+	setDatas(int, Rectangle)
+	getDeleteIndex() int
+	condenseTree([]IRTNode)
 	adjustTree(IRTNode, IRTNode)
 	quadraticSplit(Rectangle) [][]int
 	pickSeeds() []int
 	getNodeRectangle() Rectangle
 	chooseLeaf(Rectangle) *RTDataNode
-	findLeaf(Rectangle) RTDataNode
+	findLeaf(Rectangle) *RTDataNode
 }
 
 // RTNode ...
@@ -40,6 +46,18 @@ func (r *RTNode) init(rtree *RTree, paraent IRTNode, level int) {
 
 	r.datas = make([]Rectangle, r.rtree.getNodeCapacity()+1) // 多出的一个用于节点分裂
 	r.usedSpace = 0
+}
+
+func (r RTNode) getDeleteIndex() int {
+	return r.deleteIndex
+}
+
+func (r RTNode) getChild(index int) IRTNode {
+	fmt.Println("RTNode getChild will never be called")
+	return nil
+}
+func (r *RTNode) delChild(index int) {
+	fmt.Println("RTNode delChild will never be called")
 }
 
 func (r RTNode) getParent() IRTNode {
@@ -64,6 +82,17 @@ func (r RTNode) isLeaf() bool {
 	return r.level == 0
 }
 
+func (r RTNode) dataLength() int {
+	return len(r.datas)
+}
+func (r RTNode) getData(i int) Rectangle {
+	return r.datas[i]
+}
+
+func (r *RTNode) setDatas(index int, rect Rectangle) {
+	r.datas[index] = rect
+}
+
 func (r *RTNode) addData(rect Rectangle) {
 	if r.usedSpace == r.rtree.getNodeCapacity() {
 		panic(1) //Node is full.
@@ -81,7 +110,7 @@ func (r *RTNode) deleteData(i int) {
 		tmp = append(tmp, r.datas[i+1:]...)
 		r.datas = tmp
 	} else {
-		r.datas[i].clean()
+		r.datas = r.datas[0:i]
 	}
 
 	r.usedSpace--
@@ -91,8 +120,30 @@ func (r *RTNode) deleteData(i int) {
 // 如果这个结点的条目数太少下溢， 则删除该结点，同时将该结点中剩余的条目重定位到其他结点中。
 // 如果有必要，要逐级向上进行这种删除，调整向上传递的路径上的所有外包矩形，使其尽可能小，直到根节点。
 // 存储删除结点中剩余条目
-func (r *RTNode) condenseTree(c []RTNode) {
+func (r *RTNode) condenseTree(list []IRTNode) {
+	if r.isRoot() {
+		// 根节点只有一个条目了，即只有左孩子或者右孩子 ，
+		// 将唯一条目删除，释放根节点，将原根节点唯一的孩子设置为新根节点
+		if !r.isLeaf() && r.usedSpace == 1 {
+			child := r.getChild(0)
 
+			child.setParent(nil)
+			r.rtree.setRoot(child)
+		}
+	} else {
+		parent := r.getParent()
+		min := int(math.Round(float64(r.rtree.getNodeCapacity()) * r.rtree.fillFactor))
+		if r.usedSpace < min {
+			parent.deleteData(parent.getDeleteIndex()) // 其父节点中删除此条目
+			parent.delChild(parent.getDeleteIndex())
+
+			r.parent = nil
+			list = append(list, r) // 之前已经把数据删除了
+		} else {
+			parent.setDatas(parent.getDeleteIndex(), r.getNodeRectangle())
+		}
+		parent.condenseTree(list)
+	}
 }
 
 // --> 插入新的Rectangle后从插入的叶节点开始向上调整RTree，直到根节点
@@ -290,7 +341,7 @@ func (r RTNode) chooseLeaf(rect Rectangle) *RTDataNode {
 //
 // @param rectangle
 // @return 返回包含rectangle的叶节点
-func (r RTNode) findLeaf(rect Rectangle) RTDataNode {
-
-	return RTDataNode{}
+func (r RTNode) findLeaf(rect Rectangle) *RTDataNode {
+	fmt.Println("RTNode findLeaf will never be called")
+	return &RTDataNode{}
 }
