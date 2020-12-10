@@ -2,11 +2,10 @@ package rtree
 
 // RTDataNode 叶子结点
 type RTDataNode struct {
-	// RTNode
-	RTDirNode
+	RTNode
 }
 
-func (r *RTDataNode) init(rtree *RTree, paraent *RTNode) {
+func (r *RTDataNode) init(rtree *RTree, paraent IRTNode) {
 	r.RTNode.init(rtree, paraent, 0)
 }
 
@@ -16,7 +15,7 @@ func (r *RTDataNode) insert(rect Rectangle) bool {
 		r.usedSpace++
 
 		if r.parent != nil { //调整树，但不需要分裂节点，因为 节点小于节点容量，还有空间
-			r.parent.adjustTree(&r.RTNode, nil)
+			r.parent.adjustTree(r, nil)
 		}
 		return true
 	} else { // 超过结点容量
@@ -56,4 +55,11 @@ func (r *RTDataNode) splitLeaf(rect Rectangle) []RTDataNode {
 	}
 
 	return []RTDataNode{l, ll}
+}
+
+//@override
+func (r *RTDataNode) chooseLeaf(rect Rectangle) *RTDataNode {
+	r.insertIndex = r.usedSpace
+
+	return r
 }

@@ -1,19 +1,39 @@
 package rtree
 
-import "math"
+import (
+	"fmt"
+	"math"
+)
+
+type IRTNode interface {
+	getParent() IRTNode
+	setParent(IRTNode)
+	isRoot() bool
+	isIndex() bool
+	isLeaf() bool
+	addData(Rectangle)
+	deleteData(int)
+	condenseTree([]RTNode)
+	adjustTree(IRTNode, IRTNode)
+	quadraticSplit(Rectangle) [][]int
+	pickSeeds() []int
+	getNodeRectangle() Rectangle
+	chooseLeaf(Rectangle) *RTDataNode
+	findLeaf(Rectangle) RTDataNode
+}
 
 // RTNode ...
 type RTNode struct {
 	rtree       *RTree      // 结点所在的树
 	level       int         // 结点所在的层
 	datas       []Rectangle // 相当于条目
-	parent      *RTNode     // 父节点
+	parent      IRTNode     // 父节点
 	usedSpace   int         // 结点已用的空间
 	insertIndex int         // 记录插入的搜索路径索引
 	deleteIndex int         // 记录删除的查找路径索引
 }
 
-func (r *RTNode) init(rtree *RTree, paraent *RTNode, level int) {
+func (r *RTNode) init(rtree *RTree, paraent IRTNode, level int) {
 	r.rtree = rtree
 	r.parent = paraent
 	r.level = level
@@ -22,8 +42,12 @@ func (r *RTNode) init(rtree *RTree, paraent *RTNode, level int) {
 	r.usedSpace = 0
 }
 
-func (r RTNode) getParent() *RTNode {
+func (r RTNode) getParent() IRTNode {
 	return r.parent
+}
+
+func (r *RTNode) setParent(node IRTNode) {
+	r.parent = node
 }
 
 func (r RTNode) isRoot() bool {
@@ -74,8 +98,8 @@ func (r *RTNode) condenseTree(c []RTNode) {
 // --> 插入新的Rectangle后从插入的叶节点开始向上调整RTree，直到根节点
 // node1 引起需要调整的孩子结点
 // node2 分裂的结点，若未分裂则为null
-func (r *RTNode) adjustTree(node1 *RTNode, node2 *RTNode) {
-
+func (r *RTNode) adjustTree(node1 IRTNode, node2 IRTNode) {
+	fmt.Println("RTNode adjustTree will never be called")
 }
 
 //
@@ -125,13 +149,83 @@ func (r *RTNode) quadraticSplit(rect Rectangle) [][]int {
 	rem -= 2
 
 	for rem > 0 {
-		// 将剩余的所有条目全部分配到group1组中，算法终止
 		if minNodeSize-i1 == rem {
-
 			// 将剩余的所有条目全部分配到group1组中，算法终止
+			for i := 0; i < total; i++ {
+				if mask[i] != -1 { // 还没有被分配
+					group1 = append(group1, i)
+					mask[i] = -1
+					rem--
+				}
+			}
+
 		} else if minNodeSize-i2 == rem {
+			// 将剩余的所有条目全部分配到group2组中，算法终止
+			for i := 0; i < total; i++ {
+				if mask[i] != -1 { // 还没有被分配
+					group2 = append(group2, i)
+					mask[i] = -1
+					rem--
+				}
+			}
 
 		} else {
+			// 求group1中所有条目的最小外包矩形
+			mbr1 := r.datas[group1[0]].clone()
+			for i := 1; i < i1; i++ {
+				mbr1 = mbr1.getUnionRectangle(r.datas[group1[i]])
+			}
+
+			// 求group2中所有条目的外包矩形
+			mbr2 := r.datas[group2[0]].clone()
+			for i := 1; i < i2; i++ {
+				mbr2 = mbr2.getUnionRectangle(r.datas[group2[i]])
+			}
+
+			// 找出下一个进行分配的条目
+			var dif, areaDiff1, areaDiff2 float64
+			var sel int = -1
+
+			for i := 0; i < total; i++ {
+				if mask[i] != -1 { // 还没有被分配的条目
+					// 计算把每个条目加入每个组之后面积的增量，选择两个组面积增量差最大的条目索引
+
+					a := mbr1.getUnionRectangle(r.datas[i])
+					areaDiff1 = a.getArea() - mbr1.getArea()
+
+					b := mbr2.getUnionRectangle(r.datas[i])
+					areaDiff2 = b.getArea() - mbr2.getArea()
+					tmpdiff := math.Abs(areaDiff1 - areaDiff2)
+					if tmpdiff > dif {
+						dif = tmpdiff
+						sel = i
+					}
+				}
+			}
+			if areaDiff1 < areaDiff2 { // 先比较面积增量
+				group1[i1] = sel
+				i1++
+			} else if areaDiff1 > areaDiff2 {
+				group2[i2] = sel
+				i2++
+			} else if mbr1.getArea() < mbr2.getArea() { // 再比较自身面积
+				group1[i1] = sel
+				i1++
+			} else if mbr1.getArea() > mbr2.getArea() {
+				group2[i2] = sel
+				i2++
+			} else if i1 < i2 { // 最后比较条目个数
+				group1[i1] = sel
+				i1++
+			} else if i1 > i2 {
+				group2[i2] = sel
+				i2++
+			} else { //随便
+				group1[i1] = sel
+				i1++
+			}
+			mask[sel] = -1
+			rem--
 
 		}
 	} // end while
@@ -165,4 +259,38 @@ func (r RTNode) pickSeeds() []int {
 		}
 	}
 	return []int{i1, i2}
+}
+
+func (r RTNode) getNodeRectangle() Rectangle {
+	if r.usedSpace > 0 {
+		return getUnionRectangle(r.datas)
+	} else {
+		return Rectangle{}
+	}
+}
+
+// 步骤CL1：初始化――记R树的根节点为N。
+// 步骤CL2：检查叶节点――如果N是个叶节点，返回N
+// 步骤CL3：选择子树――如果N不是叶节点，则从N中所有的条目中选出一个最佳的条目F
+// 选择的标准是：如果E加入F后，F的外廓矩形FI扩张最小，则F就是最佳的条目。如果有两个
+// 条目在加入E后外廓矩形的扩张程度相等，则在这两者中选择外廓矩形较小的那个。
+// 步骤CL4：向下寻找直至达到叶节点――记Fp指向的孩子节点为N，然后返回步骤CL2循环运算， 直至查找到叶节点。
+//
+// @param Rectangle
+// @return RTDataNode
+func (r RTNode) chooseLeaf(rect Rectangle) *RTDataNode {
+	fmt.Println("RTNode chooseLeaf will never be called")
+	return &RTDataNode{}
+}
+
+// R树的根节点为T，查找包含rectangle的叶子结点
+//
+// 1、如果T不是叶子结点，则逐个查找T中的每个条目是否包围rectangle，若包围则递归调用findLeaf()
+// 2、如果T是一个叶子结点，则逐个检查T中的每个条目能否匹配rectangle
+//
+// @param rectangle
+// @return 返回包含rectangle的叶节点
+func (r RTNode) findLeaf(rect Rectangle) RTDataNode {
+
+	return RTDataNode{}
 }

@@ -20,10 +20,23 @@ func (r RTree) getDimension() int {
 	return r.dimension
 }
 
-func (r *RTree) insert(rect Rectangle) {
+func (r *RTree) insert(rect Rectangle) bool {
+	if rect.isNULL() {
+		panic(1)
+	}
+	if rect.getDimension() != r.getDimension() {
+		panic(1)
+	}
 
+	leaf := r.root.chooseLeaf(rect)
+
+	return leaf.insert(rect)
 }
 
 func (r RTree) getNodeCapacity() int {
 	return r.nodeCapacity
+}
+
+func (r *RTree) setRoot(root *RTNode) {
+	r.root = root
 }
