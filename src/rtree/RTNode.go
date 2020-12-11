@@ -19,7 +19,7 @@ type IRTNode interface {
 	deleteData(int)
 	setDatas(int, Rectangle)
 	getDeleteIndex() int
-	condenseTree([]IRTNode)
+	condenseTree(*[]IRTNode)
 	adjustTree(IRTNode, IRTNode)
 	quadraticSplit(Rectangle) [][]int
 	pickSeeds() []int
@@ -28,6 +28,8 @@ type IRTNode interface {
 	findLeaf(Rectangle) *RTDataNode //用于删除
 
 	Search(Rectangle) []Rectangle //用于查找
+
+	getUsedSpace() int
 }
 
 // RTNode ...
@@ -48,6 +50,10 @@ func (r *RTNode) init(rtree *RTree, paraent IRTNode, level int) {
 
 	r.datas = make([]Rectangle, r.rtree.getNodeCapacity()+1) // 多出的一个用于节点分裂
 	r.usedSpace = 0
+}
+
+func (r RTNode) getUsedSpace() int {
+	return r.usedSpace
 }
 
 func (r RTNode) Search(Rectangle) []Rectangle {
@@ -104,7 +110,7 @@ func (r *RTNode) setDatas(index int, rect Rectangle) {
 
 func (r *RTNode) addData(rect Rectangle) {
 	if r.usedSpace == r.rtree.getNodeCapacity() {
-		panic(1) //Node is full.
+		panic("Node is full.") //Node is full.
 	}
 
 	r.datas[r.usedSpace] = rect
@@ -113,14 +119,10 @@ func (r *RTNode) addData(rect Rectangle) {
 }
 
 func (r *RTNode) deleteData(i int) {
-	if !r.datas[i+1].isNULL() {
-		var tmp []Rectangle
-		tmp = append(tmp, r.datas[0:i]...)
-		tmp = append(tmp, r.datas[i+1:]...)
-		r.datas = tmp
-	} else {
-		r.datas = r.datas[0:i]
-	}
+	tmp := make([]Rectangle, r.rtree.getNodeCapacity()+1)
+	copy(tmp, r.datas[0:i])
+	copy(tmp[i:], r.datas[i+1:])
+	r.datas = tmp
 
 	r.usedSpace--
 }
@@ -129,7 +131,7 @@ func (r *RTNode) deleteData(i int) {
 // 如果这个结点的条目数太少下溢， 则删除该结点，同时将该结点中剩余的条目重定位到其他结点中。
 // 如果有必要，要逐级向上进行这种删除，调整向上传递的路径上的所有外包矩形，使其尽可能小，直到根节点。
 // 存储删除结点中剩余条目
-func (r *RTNode) condenseTree(list []IRTNode) {
+func (r *RTNode) condenseTree(list *[]IRTNode) {
 	if r.isRoot() {
 		// 根节点只有一个条目了，即只有左孩子或者右孩子 ，
 		// 将唯一条目删除，释放根节点，将原根节点唯一的孩子设置为新根节点
@@ -147,7 +149,7 @@ func (r *RTNode) condenseTree(list []IRTNode) {
 			parent.delChild(parent.getDeleteIndex())
 
 			r.parent = nil
-			list = append(list, r) // 之前已经把数据删除了
+			*list = append(*list, r) // 之前已经把数据删除了
 		} else {
 			parent.setDatas(parent.getDeleteIndex(), r.getNodeRectangle())
 		}
@@ -169,7 +171,7 @@ func (r *RTNode) adjustTree(node1 IRTNode, node2 IRTNode) {
 // 3、调用pickNext来选择下一个进行分配的条目--计算把每个条目加入每个组之后面积的增量，选择两个组面积增量差最大的条目索引,
 // 如果面积增量相等则选择面积较小的组，若面积也相等则选择条目数更少的组<br>
 //
-// @param rectangle
+// @param rect
 //            导致分裂的溢出Rectangle
 // @return 两个组中的条目的索引
 func (r *RTNode) quadraticSplit(rect Rectangle) [][]int {
@@ -256,7 +258,7 @@ func (r *RTNode) quadraticSplit(rect Rectangle) [][]int {
 					b := mbr2.getUnionRectangle(r.datas[i])
 					areaDiff2 = b.getArea() - mbr2.getArea()
 					tmpdiff := math.Abs(areaDiff1 - areaDiff2)
-					if tmpdiff > dif {
+					if tmpdiff >= dif {
 						dif = tmpdiff
 						sel = i
 					}
@@ -302,7 +304,7 @@ func (r *RTNode) quadraticSplit(rect Rectangle) [][]int {
 // 2、Choose the pair with the largest d
 // @return 返回两个条目如果放在一起会有最多的冗余空间的条目索引
 func (r RTNode) pickSeeds() []int {
-	var inefficiency float64
+	var inefficiency float64 = -1
 	var i1, i2 int
 
 	for i := 0; i < r.usedSpace; i++ {

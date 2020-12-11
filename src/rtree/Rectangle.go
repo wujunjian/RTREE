@@ -4,6 +4,7 @@ package rtree
 type Rectangle struct {
 	low  Point
 	high Point
+	info interface{}
 }
 
 func (r Rectangle) clone() (c Rectangle) {

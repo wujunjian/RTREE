@@ -42,7 +42,7 @@ type LngLatPoint struct {
 	Lat float64
 }
 
-func CoordinatesToRectangle(points []LngLatPoint) Rectangle {
+func CoordinatesToRectangle(points []LngLatPoint, info interface{}) Rectangle {
 	var minlng, minlat, maxlng, maxlat float64
 
 	for i, p := range points {
@@ -70,16 +70,17 @@ func CoordinatesToRectangle(points []LngLatPoint) Rectangle {
 	var rect Rectangle
 	rect.low.data = append(rect.low.data, minlng, minlat)
 	rect.high.data = append(rect.high.data, maxlng, maxlat)
+	rect.info = info
 
 	return rect
 }
 
-func (r *RTree) InsertCoordinates(points []LngLatPoint) bool {
-	return r.Insert(CoordinatesToRectangle(points))
+func (r *RTree) InsertCoordinates(points []LngLatPoint, info interface{}) bool {
+	return r.Insert(CoordinatesToRectangle(points, info))
 }
 
 func (r *RTree) SearchCoordinates(points []LngLatPoint) []Rectangle {
-	return r.Search(CoordinatesToRectangle(points))
+	return r.Search(CoordinatesToRectangle(points, nil))
 }
 
 func (r RTree) getNodeCapacity() int {
@@ -124,6 +125,27 @@ func traversePostOrder(root IRTNode) (list []IRTNode) {
 	if !root.isLeaf() {
 		for i := 0; i < root.dataLength(); i++ {
 			list = append(list, traversePostOrder(root.getChild(i))...)
+		}
+	}
+
+	return
+}
+
+func (r RTree) Range() (leaf []Rectangle) {
+
+	node := r.root
+	leaf = r.RangeDir(node)
+	return
+}
+
+func (r RTree) RangeDir(node IRTNode) (leaf []Rectangle) {
+	if node.isLeaf() {
+		for i := 0; i < node.getUsedSpace(); i++ {
+			leaf = append(leaf, node.getData(i))
+		}
+	} else {
+		for i := 0; i < node.getUsedSpace(); i++ {
+			leaf = append(leaf, r.RangeDir(node.getChild(i))...)
 		}
 	}
 

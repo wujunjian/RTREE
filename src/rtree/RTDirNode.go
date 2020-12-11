@@ -11,7 +11,7 @@ type RTDirNode struct {
 }
 
 func (r *RTDirNode) init(rtree *RTree, parent IRTNode, level int) {
-	//	r.children
+	r.children = make([]IRTNode, rtree.getNodeCapacity()+1)
 	r.RTNode.init(rtree, parent, level)
 }
 
@@ -52,7 +52,7 @@ func (r RTDirNode) chooseLeaf(rect Rectangle) *RTDataNode {
 		}
 
 	default:
-		panic(1)
+		panic("error treeType")
 	}
 	r.insertIndex = index
 
@@ -64,14 +64,14 @@ func (r RTDirNode) chooseLeaf(rect Rectangle) *RTDataNode {
 // @return -->返回最小重叠面积的结点的索引， 如果重叠面积相等则选择加入此Rectangle后面积增量更小的，
 //         如果面积增量还相等则选择自身面积更小的
 func (r RTDirNode) findLeastOverlap(rect Rectangle) int {
-	var overlap float64 = -1
+	var overlap float64 = math.MaxFloat64
 	var sel int = -1
 
 	for i := 0; i < r.usedSpace; i++ {
 		node := r.getChild(i)
 		var ol float64 // 用于记录每个孩子的datas数据与传入矩形的重叠面积之和
 
-		for j := 0; j < node.dataLength(); j++ {
+		for j := 0; j < node.getUsedSpace(); j++ {
 			// 将传入矩形与各个矩形重叠的面积累加到ol中，得到重叠的总面积
 			ol += rect.intersectingArea(node.getData(j))
 		}
@@ -144,11 +144,10 @@ func (r *RTDirNode) adjustTree(node1, node2 IRTNode) {
 func (r *RTDirNode) insert(node IRTNode) bool {
 	if r.usedSpace < r.rtree.getNodeCapacity() {
 
-		r.datas[r.usedSpace] = node.getNodeRectangle()
-		r.usedSpace++
+		r.children[r.usedSpace] = node // new
+		r.addData(node.getNodeRectangle())
 
-		r.children = append(r.children, node) // new
-		node.setParent(r)                     // new
+		node.setParent(r) // new
 
 		if r.parent != nil { // 不是根节点
 			r.parent.adjustTree(r, nil)
@@ -163,10 +162,12 @@ func (r *RTDirNode) insert(node IRTNode) bool {
 			// 新建根节点，层数加1
 			var newRoot RTDirNode
 			newRoot.init(r.rtree, nil, r.level+1)
-			newRoot.addData(n.getNodeRectangle())
-			newRoot.addData(nn.getNodeRectangle())
 
-			newRoot.children = append(newRoot.children, n, nn)
+			newRoot.children[newRoot.usedSpace] = n
+			newRoot.addData(n.getNodeRectangle())
+
+			newRoot.children[newRoot.usedSpace] = nn
+			newRoot.addData(nn.getNodeRectangle())
 
 			n.setParent(&newRoot)
 			nn.setParent(&newRoot)
@@ -186,8 +187,9 @@ func (r RTDirNode) getChild(index int) IRTNode {
 }
 
 func (r *RTDirNode) delChild(index int) {
-	tmp := r.children[0:index]
-	tmp = append(tmp, r.children[index+1:len(r.children)]...)
+	tmp := make([]IRTNode, r.rtree.getNodeCapacity()+1)
+	copy(tmp, r.children[0:index])
+	copy(tmp[index:], r.children[index+1:])
 	r.children = tmp
 }
 
@@ -200,8 +202,8 @@ func (r *RTDirNode) splitIndex(node IRTNode) []IRTNode {
 	case RTREE_QUADRATIC:
 	case RTREE_EXPONENTIAL:
 		group = r.quadraticSplit(node.getNodeRectangle())
-		r.children = append(r.children, node) // new
-		node.setParent(r)                     // new
+		r.children[r.usedSpace] = node // new
+		node.setParent(r)              // new
 	case RTREE_EXPONENTIAL:
 	case RSTAR:
 	default:
@@ -214,18 +216,20 @@ func (r *RTDirNode) splitIndex(node IRTNode) []IRTNode {
 	group1 := group[0]
 	group2 := group[1]
 
-	for _, i := range group1 {
-		index1.datas = append(index1.datas, r.datas[i])
-		index1.children = append(index1.children, r.children[i])
+	for i, g := range group1 {
+		index1.datas[i] = r.datas[g]
+		index1.children[i] = r.children[g]
 
-		r.children[i].setParent(&index1)
+		index1.children[i].setParent(&index1)
+		index1.usedSpace++
 	}
 
-	for _, i := range group2 {
-		index2.datas = append(index2.datas, r.datas[i])
-		index2.children = append(index2.children, r.children[i])
+	for i, g := range group2 {
+		index2.datas[i] = r.datas[g]
+		index2.children[i] = r.children[g]
 
-		r.children[i].setParent(&index2)
+		index2.children[i].setParent(&index2)
+		index2.usedSpace++
 	}
 
 	return []IRTNode{&index1, &index2}

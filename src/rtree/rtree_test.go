@@ -70,18 +70,51 @@ func TestRTree(x *testing.T) {
 		{116.342726, 39.942811},
 		{116.340880, 39.945970},
 		{116.341953, 39.939159},
-		{116.329937, 39.939422}})
+		{116.329937, 39.939422}}, "zoo")
 
 	//故宫
 	t.InsertCoordinates([]LngLatPoint{
 		{116.392035, 39.922475},
 		{116.401777, 39.922902},
 		{116.402078, 39.913423},
-		{116.392336, 39.913193}})
+		{116.392336, 39.913193}}, "故宫0")
+	t.InsertCoordinates([]LngLatPoint{
+		{116.392035, 39.922475},
+		{116.401777, 39.922902},
+		{116.402078, 39.913423},
+		{116.392336, 39.913193}}, "故宫1")
+	t.InsertCoordinates([]LngLatPoint{
+		{116.392035, 39.922475},
+		{116.401777, 39.922902},
+		{116.402078, 39.913423},
+		{116.392336, 39.913193}}, "故宫2")
+	t.InsertCoordinates([]LngLatPoint{
+		{116.392035, 39.922475},
+		{116.401777, 39.922902},
+		{116.402078, 39.913423},
+		{116.392336, 39.913193}}, "故宫3")
+	t.InsertCoordinates([]LngLatPoint{
+		{116.392035, 39.922475},
+		{116.401777, 39.922902},
+		{116.402078, 39.913423},
+		{116.392336, 39.913193}}, "故宫4")
+	t.InsertCoordinates([]LngLatPoint{
+		{116.392035, 39.922475},
+		{116.401777, 39.922902},
+		{116.402078, 39.913423},
+		{116.392336, 39.913193}}, "故宫5")
 
-	// for i := 0; i < t.root.dataLength(); i++ {
-	// fmt.Println("tree data :", t.root.getData(i).getLow(), t.root.getData(i).getHigh())
-	// }
+	//家
+	t.InsertCoordinates([]LngLatPoint{
+		{116.556916, 39.919734},
+		{116.559792, 39.919784},
+		{116.559867, 39.918015},
+		{116.556906, 39.917784}}, "home")
+
+	for i, rect := range t.Range() {
+		fmt.Println(i, rect.info.(string))
+	}
+	return
 
 	//景山
 	result := t.SearchCoordinates([]LngLatPoint{
@@ -90,7 +123,7 @@ func TestRTree(x *testing.T) {
 
 	fmt.Println("景山 result len", len(result))
 	for _, r := range result {
-		fmt.Println(r.low.data)
+		fmt.Println(r.low.data, r.high.data)
 	}
 
 	// 故宫
@@ -98,8 +131,17 @@ func TestRTree(x *testing.T) {
 		{116.397614, 39.918920},
 	})
 
-	fmt.Println("故宫 result len", len(result))
+	fmt.Println("result len", len(result))
 	for _, r := range result {
-		fmt.Println(r.low.data, r.high.data)
+		fmt.Println(r.low.data, r.high.data, r.info.(string))
 	}
+}
+
+func TestCopy(t *testing.T) {
+	a := []int{1, 2, 3, 4, 5}
+	b := make([]int, 5)
+	copy(b, a[0:2])
+	fmt.Println(b, len(b), cap(b))
+	copy(b[2:], a[3:])
+	fmt.Println(b, len(b), cap(b))
 }

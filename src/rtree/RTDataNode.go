@@ -16,8 +16,7 @@ func (r *RTDataNode) init(rtree *RTree, paraent IRTNode) {
 //  @return
 func (r *RTDataNode) insert(rect Rectangle) bool {
 	if r.usedSpace < r.rtree.getNodeCapacity() { // 已用节点小于节点容量
-		r.datas[r.usedSpace] = rect
-		r.usedSpace++
+		r.addData(rect)
 
 		if r.parent != nil { //调整树，但不需要分裂节点，因为 节点小于节点容量，还有空间
 			r.parent.adjustTree(r, nil)
@@ -35,13 +34,15 @@ func (r *RTDataNode) insert(rect Rectangle) bool {
 
 			r.rtree.setRoot(&dirNode)
 			// getNodeRectangle()返回包含结点中所有条目的最小Rectangle
+			dirNode.children[dirNode.usedSpace] = &l
 			dirNode.addData(l.getNodeRectangle())
+
+			dirNode.children[dirNode.usedSpace] = &ll
 			dirNode.addData(ll.getNodeRectangle())
 
 			l.setParent(&dirNode)
 			ll.setParent(&dirNode)
 
-			dirNode.children = append(dirNode.children, &l, &ll)
 		} else { // 不是根节点
 			r.parent.adjustTree(&l, &ll)
 		}
@@ -99,7 +100,7 @@ func (r *RTDataNode) delete(rect Rectangle) int {
 		if r.datas[i].equals(rect) {
 			r.deleteData(i)
 			var deleteEntriesList []IRTNode
-			r.condenseTree(deleteEntriesList)
+			r.condenseTree(&deleteEntriesList)
 
 			// 重新插入删除结点中剩余的条目
 			for _, node := range deleteEntriesList {
@@ -139,8 +140,12 @@ func (r *RTDataNode) findLeaf(rect Rectangle) *RTDataNode {
 
 //@override
 func (r RTDataNode) Search(rect Rectangle) []Rectangle {
-
+	if !r.getNodeRectangle().isIntersection(rect) {
+		//没有交集
+		return nil
+	}
 	var leaf []Rectangle
+
 	for i := 0; i < r.usedSpace; i++ {
 		d := r.getData(i)
 		if rect.enclosure(d) { //d 被包含 或完全相等
@@ -152,9 +157,5 @@ func (r RTDataNode) Search(rect Rectangle) []Rectangle {
 		}
 	}
 
-	if len(leaf) == 0 && !r.isRoot() {
-		panic("RTDataNode will matched for sure")
-	}
-	// fmt.Println("RTDataNode", leaf)
 	return leaf
 }
