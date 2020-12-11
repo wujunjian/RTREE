@@ -25,7 +25,9 @@ type IRTNode interface {
 	pickSeeds() []int
 	getNodeRectangle() Rectangle
 	chooseLeaf(Rectangle) *RTDataNode
-	findLeaf(Rectangle) *RTDataNode
+	findLeaf(Rectangle) *RTDataNode //用于删除
+
+	Search(Rectangle, []Rectangle) //用于查找
 }
 
 // RTNode ...
@@ -46,6 +48,10 @@ func (r *RTNode) init(rtree *RTree, paraent IRTNode, level int) {
 
 	r.datas = make([]Rectangle, r.rtree.getNodeCapacity()+1) // 多出的一个用于节点分裂
 	r.usedSpace = 0
+}
+
+func (r RTNode) Search(Rectangle, []Rectangle) {
+	fmt.Println("RTNode Search will never be called")
 }
 
 func (r RTNode) getDeleteIndex() int {

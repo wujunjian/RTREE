@@ -109,17 +109,17 @@ func (r Rectangle) isIntersection(o Rectangle) bool {
 	return true
 }
 
-// 判断rectangle是否包围
+// 判断 入参:rect 是否被包围
 func (r Rectangle) enclosure(o Rectangle) bool {
 	if o.isNULL() {
-		panic(1)
+		panic("Rectangle cannot be null.")
 	}
 
 	if r.getDimension() != o.getDimension() {
-		panic(1)
+		panic("Rectangle dimension is different from current dimension.")
 	}
 
-	// 只要传入的rectangle有一个维度的坐标越界了就不包含
+	// 只要传入的rectangle有一个维度的坐标越界了就不被包含
 	for i := 0; i < r.getDimension(); i++ {
 
 		if o.low.getFloatCoordinate(i) < r.low.getFloatCoordinate(i) ||

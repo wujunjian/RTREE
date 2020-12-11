@@ -127,11 +127,25 @@ func (r *RTDataNode) delete(rect Rectangle) int {
 
 // @Override
 func (r *RTDataNode) findLeaf(rect Rectangle) *RTDataNode {
-	for i := 0; i < r.usedSpace; i++ {
-		if r.datas[i].enclosure(rect) {
+
+	for i, d := range r.datas {
+		if d.enclosure(rect) {
 			r.deleteIndex = i
 			return r
 		}
 	}
 	return nil
+}
+
+//@override
+func (r RTDataNode) Search(rect Rectangle, leaf []Rectangle) {
+	for _, d := range r.datas {
+		if rect.enclosure(d) { //d 被包含 或完全相等
+			leaf = append(leaf, d)
+		} else if d.enclosure(rect) { //rect 被包含,查找矩形小于条目
+			leaf = append(leaf, d)
+		} else if d.isIntersection(rect) { //有部分交集? 是否返回
+			leaf = append(leaf, d)
+		}
+	}
 }

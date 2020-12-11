@@ -66,6 +66,12 @@ func (r *RTree) delete(rect Rectangle) int {
 	return -1
 }
 
+func (r RTree) Search(rect Rectangle) []Rectangle {
+	var leafs []Rectangle
+	r.root.Search(rect, leafs)
+	return leafs
+}
+
 func traversePostOrder(root IRTNode) (list []IRTNode) {
 	if root == nil {
 		panic("Node cannot be null.")
