@@ -105,7 +105,7 @@ func (r *RTDataNode) delete(rect Rectangle) int {
 			for _, node := range deleteEntriesList {
 				if node.isLeaf() { // 叶子结点，直接把其上的数据重新插入
 					for k := 0; k < node.dataLength(); k++ {
-						r.rtree.insert(node.getData(k))
+						r.rtree.Insert(node.getData(k))
 					}
 				} else { // 非叶子结点，需要先后序遍历出其上的所有结点
 					traverseNodes := traversePostOrder(node)
@@ -113,7 +113,7 @@ func (r *RTDataNode) delete(rect Rectangle) int {
 					for _, traverseNode := range traverseNodes {
 						if traverseNode.isLeaf() {
 							for t := 0; t < traverseNode.dataLength(); t++ {
-								r.rtree.insert(traverseNode.getData(t))
+								r.rtree.Insert(traverseNode.getData(t))
 							}
 						}
 					}
@@ -138,14 +138,23 @@ func (r *RTDataNode) findLeaf(rect Rectangle) *RTDataNode {
 }
 
 //@override
-func (r RTDataNode) Search(rect Rectangle, leaf []Rectangle) {
-	for _, d := range r.datas {
+func (r RTDataNode) Search(rect Rectangle) []Rectangle {
+
+	var leaf []Rectangle
+	for i := 0; i < r.usedSpace; i++ {
+		d := r.getData(i)
 		if rect.enclosure(d) { //d 被包含 或完全相等
 			leaf = append(leaf, d)
 		} else if d.enclosure(rect) { //rect 被包含,查找矩形小于条目
 			leaf = append(leaf, d)
-		} else if d.isIntersection(rect) { //有部分交集? 是否返回
+		} else if d.isIntersection(rect) { //有部分交集
 			leaf = append(leaf, d)
 		}
 	}
+
+	if len(leaf) == 0 && !r.isRoot() {
+		panic("RTDataNode will matched for sure")
+	}
+	// fmt.Println("RTDataNode", leaf)
+	return leaf
 }

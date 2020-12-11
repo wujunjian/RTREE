@@ -16,19 +16,21 @@ func (r *RTDirNode) init(rtree *RTree, parent IRTNode, level int) {
 }
 
 //@override
-func (r RTDirNode) Search(rect Rectangle, leaf []Rectangle) {
+func (r RTDirNode) Search(rect Rectangle) []Rectangle {
 
 	if !r.getNodeRectangle().isIntersection(rect) {
 		//没有交集
-		return
+		return nil
 	}
+	var leaf []Rectangle
 
 	for _, c := range r.children {
 		// if c.getNodeRectangle().isIntersection(rect) {
 		//有交集, 此处没有判断的必要
-		c.Search(rect, leaf)
+		leaf = append(leaf, c.Search(rect)...)
 		// }
 	}
+	return leaf
 }
 
 //@override

@@ -27,7 +27,7 @@ type IRTNode interface {
 	chooseLeaf(Rectangle) *RTDataNode
 	findLeaf(Rectangle) *RTDataNode //用于删除
 
-	Search(Rectangle, []Rectangle) //用于查找
+	Search(Rectangle) []Rectangle //用于查找
 }
 
 // RTNode ...
@@ -50,8 +50,10 @@ func (r *RTNode) init(rtree *RTree, paraent IRTNode, level int) {
 	r.usedSpace = 0
 }
 
-func (r RTNode) Search(Rectangle, []Rectangle) {
+func (r RTNode) Search(Rectangle) []Rectangle {
 	fmt.Println("RTNode Search will never be called")
+	// panic("RTNode Search will never be called")
+	return nil
 }
 
 func (r RTNode) getDeleteIndex() int {
@@ -75,6 +77,7 @@ func (r *RTNode) setParent(node IRTNode) {
 }
 
 func (r RTNode) isRoot() bool {
+	// fmt.Println("isRoot", r.parent, r.parent == nil)
 	return r.parent == nil
 }
 

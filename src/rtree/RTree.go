@@ -9,7 +9,7 @@ type RTree struct {
 	dimension    int     // 维度
 }
 
-func (r *RTree) init(capacity int, fillFactor float64, t int, dimension int) {
+func (r *RTree) Init(capacity int, fillFactor float64, t int, dimension int) {
 	r.fillFactor = fillFactor
 	r.nodeCapacity = capacity
 	r.treeType = t
@@ -24,17 +24,62 @@ func (r RTree) getDimension() int {
 	return r.dimension
 }
 
-func (r *RTree) insert(rect Rectangle) bool {
+func (r *RTree) Insert(rect Rectangle) bool {
 	if rect.isNULL() {
-		panic(1)
+		panic("Rectangle cannot be null.")
 	}
 	if rect.getDimension() != r.getDimension() {
-		panic(1)
+		panic("Rectangle dimension different than RTree dimension.")
 	}
 
 	leaf := r.root.chooseLeaf(rect)
 
 	return leaf.insert(rect)
+}
+
+type LngLatPoint struct {
+	Lng float64
+	Lat float64
+}
+
+func CoordinatesToRectangle(points []LngLatPoint) Rectangle {
+	var minlng, minlat, maxlng, maxlat float64
+
+	for i, p := range points {
+		if i == 0 {
+			minlng = p.Lng
+			maxlng = p.Lng
+			minlat = p.Lat
+			maxlat = p.Lat
+		}
+		if p.Lng < minlng {
+			minlng = p.Lng
+		}
+		if p.Lng > maxlng {
+			maxlng = p.Lng
+		}
+
+		if p.Lat < minlat {
+			minlat = p.Lat
+		}
+		if p.Lat > maxlat {
+			maxlat = p.Lat
+		}
+	}
+
+	var rect Rectangle
+	rect.low.data = append(rect.low.data, minlng, minlat)
+	rect.high.data = append(rect.high.data, maxlng, maxlat)
+
+	return rect
+}
+
+func (r *RTree) InsertCoordinates(points []LngLatPoint) bool {
+	return r.Insert(CoordinatesToRectangle(points))
+}
+
+func (r *RTree) SearchCoordinates(points []LngLatPoint) []Rectangle {
+	return r.Search(CoordinatesToRectangle(points))
 }
 
 func (r RTree) getNodeCapacity() int {
@@ -51,7 +96,7 @@ func (r *RTree) setRoot(root IRTNode) {
 //  3、调用算法condenseTree
 //  @param rectangle
 //  @return
-func (r *RTree) delete(rect Rectangle) int {
+func (r *RTree) Delete(rect Rectangle) int {
 	if rect.isNULL() {
 		panic("Rectangle cannot be null.")
 	}
@@ -67,9 +112,7 @@ func (r *RTree) delete(rect Rectangle) int {
 }
 
 func (r RTree) Search(rect Rectangle) []Rectangle {
-	var leafs []Rectangle
-	r.root.Search(rect, leafs)
-	return leafs
+	return r.root.Search(rect)
 }
 
 func traversePostOrder(root IRTNode) (list []IRTNode) {
