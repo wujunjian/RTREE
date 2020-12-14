@@ -24,17 +24,15 @@ func (r RTDirNode) Search(rect Rectangle) []Rectangle {
 	}
 	var leaf []Rectangle
 
-	for _, c := range r.children {
-		// if c.getNodeRectangle().isIntersection(rect) {
-		//有交集, 此处没有判断的必要
+	for i := 0; i < r.usedSpace; i++ {
+		c := r.getChild(i)
 		leaf = append(leaf, c.Search(rect)...)
-		// }
 	}
 	return leaf
 }
 
 //@override
-func (r RTDirNode) chooseLeaf(rect Rectangle) *RTDataNode {
+func (r *RTDirNode) chooseLeaf(rect Rectangle) *RTDataNode {
 	var index int
 
 	switch r.rtree.treeType {

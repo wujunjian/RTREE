@@ -95,16 +95,12 @@ func TestRTree(x *testing.T) {
 		{116.402078, 39.913423},
 		{116.392336, 39.913193}}, "故宫3")
 
-	fmt.Println("55555---")
-	t.BFSearch()
-	fmt.Println("***************************************")
-	fmt.Println("***************************************")
-	fmt.Println()
 	t.InsertCoordinates([]LngLatPoint{
 		{116.392035, 39.922475},
 		{116.401777, 39.922902},
 		{116.402078, 39.913423},
 		{116.392336, 39.913193}}, "故宫4")
+
 	t.InsertCoordinates([]LngLatPoint{
 		{116.392035, 39.922475},
 		{116.401777, 39.922902},
@@ -119,11 +115,13 @@ func TestRTree(x *testing.T) {
 		{116.556906, 39.917784}}, "home")
 
 	// t.BFSearch()
-	return
-	for i, rect := range t.Range() {
-		fmt.Println(i, rect.info.(string))
-	}
-	return
+	// fmt.Println("***************************************")
+	// fmt.Println("***************************************")
+	// fmt.Println()
+
+	// for i, rect := range t.Range() {
+	// 	fmt.Println(i, rect.info.(string))
+	// }
 
 	//景山
 	result := t.SearchCoordinates([]LngLatPoint{
@@ -142,7 +140,7 @@ func TestRTree(x *testing.T) {
 
 	fmt.Println("result len", len(result))
 	for _, r := range result {
-		fmt.Println(r.low.data, r.high.data, r.info.(string))
+		fmt.Println(r.toString(), r.info.(string))
 	}
 }
 

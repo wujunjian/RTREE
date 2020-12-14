@@ -14,8 +14,8 @@ type RTree struct {
 }
 
 func (r *RTree) Init(capacity int, fillFactor float64, t int, dimension int) {
-	r.fillFactor = fillFactor
 	r.nodeCapacity = capacity
+	r.fillFactor = fillFactor
 	r.treeType = t
 	r.dimension = dimension
 

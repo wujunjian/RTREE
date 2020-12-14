@@ -243,7 +243,7 @@ func (r *RTNode) quadraticSplit(rect Rectangle) [][]int {
 			}
 
 			// 找出下一个进行分配的条目
-			var dif, areaDiff1, areaDiff2 float64
+			var dif, areaDiff1, areaDiff2 float64 = -1, -1, -1
 			var sel int = -1
 
 			for i := 0; i < total; i++ {
@@ -256,7 +256,7 @@ func (r *RTNode) quadraticSplit(rect Rectangle) [][]int {
 					b := mbr2.getUnionRectangle(r.datas[i])
 					areaDiff2 = b.getArea() - mbr2.getArea()
 					tmpdiff := math.Abs(areaDiff1 - areaDiff2)
-					if tmpdiff >= dif {
+					if tmpdiff > dif {
 						dif = tmpdiff
 						sel = i
 					}
