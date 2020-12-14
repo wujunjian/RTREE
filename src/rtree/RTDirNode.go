@@ -197,15 +197,17 @@ func (r *RTDirNode) splitIndex(node IRTNode) []IRTNode {
 
 	switch r.rtree.treeType {
 	case RTREE_LINEAR:
+		panic("Undefined")
 	case RTREE_QUADRATIC:
-	case RTREE_EXPONENTIAL:
 		group = r.quadraticSplit(node.getNodeRectangle())
 		r.children[r.usedSpace] = node // new
 		node.setParent(r)              // new
 	case RTREE_EXPONENTIAL:
+		panic("Undefined")
 	case RSTAR:
+		panic("Undefined")
 	default:
-		panic(1)
+		panic("error treeType")
 	}
 	var index1, index2 RTDirNode
 	index1.init(r.rtree, r.parent, r.level)

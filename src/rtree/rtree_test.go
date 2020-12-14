@@ -2,7 +2,10 @@ package rtree
 
 import (
 	"fmt"
+	"math"
+	"math/rand"
 	"testing"
+	"time"
 )
 
 type myin interface {
@@ -151,4 +154,70 @@ func TestCopy(t *testing.T) {
 	fmt.Println(b, len(b), cap(b))
 	copy(b[2:], a[3:])
 	fmt.Println(b, len(b), cap(b))
+}
+
+func TestMillion(x *testing.T) {
+
+	var t RTree
+	t.Init(4, 0.4, RTREE_QUADRATIC, 2)
+
+	// src := rand.NewSource(time.Now().Unix())
+	src := rand.NewSource(1)
+
+	r := rand.New(src)
+	itemnum := 1000
+	for i := 0; i < itemnum; i++ {
+		lng := math.Mod(r.NormFloat64()*360, 180)
+		lat := math.Mod(r.NormFloat64()*180, 90)
+
+		if i == 3 {
+			fmt.Printf("%07d\t[%11.6f,%11.6f]\n", i, lng, lat)
+		}
+
+		t.InsertCoordinates([]LngLatPoint{
+			{lng, lat}}, fmt.Sprintf("%07d", i))
+
+	}
+	fmt.Println("root level", t.root.getLevel())
+
+	searchRange := []LngLatPoint{
+		{56, 87},
+		{60, 90},
+	}
+
+	begintime := time.Now()
+	result := t.SearchCoordinates(searchRange)
+	endtime := time.Now()
+	usetime := endtime.Sub(begintime)
+
+	fmt.Println("result len", len(result), "usetime", usetime)
+	for _, r := range result {
+		fmt.Println(r.toString(), r.info.(string))
+	}
+
+	t.BFSearch()
+	fmt.Println("***************************************")
+	fmt.Println("***************************************")
+	fmt.Println()
+	return
+
+	t.RDelete(result)
+	newresult := t.SearchCoordinates(searchRange)
+
+	fmt.Println("need zero newresult len", len(newresult))
+	for _, r := range newresult {
+		fmt.Println(r.toString(), r.info.(string))
+	}
+
+	//再次插入
+	for _, item := range result {
+		t.Insert(item)
+	}
+
+	newresult1 := t.SearchCoordinates(searchRange)
+	fmt.Println("newresult1 len", len(newresult1))
+	for _, r := range newresult1 {
+		fmt.Println(r.toString(), r.info.(string))
+	}
+
 }

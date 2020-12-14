@@ -58,12 +58,15 @@ func (r *RTDataNode) splitLeaf(rect Rectangle) []RTDataNode {
 
 	switch r.rtree.treeType {
 	case RTREE_LINEAR:
+		fallthrough
 	case RTREE_QUADRATIC:
 		group = r.quadraticSplit(rect)
 	case RTREE_EXPONENTIAL:
+		panic("Undefined")
 	case RSTAR:
+		panic("Undefined")
 	default:
-		panic(1)
+		panic("error treeType")
 	}
 
 	var l, ll RTDataNode

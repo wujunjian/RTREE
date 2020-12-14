@@ -116,6 +116,12 @@ func (r *RTree) Delete(rect Rectangle) int {
 	return -1
 }
 
+func (r *RTree) RDelete(rect []Rectangle) {
+	for _, item := range rect {
+		r.Delete(item)
+	}
+}
+
 func (r RTree) Search(rect Rectangle) []Rectangle {
 	return r.root.Search(rect)
 }

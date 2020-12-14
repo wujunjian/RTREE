@@ -115,20 +115,20 @@ func (r Rectangle) isIntersection(o Rectangle) bool {
 }
 
 // 判断 入参:rect 是否被包围
-func (r Rectangle) enclosure(o Rectangle) bool {
-	if o.isNULL() {
+func (r Rectangle) enclosure(rect Rectangle) bool {
+	if rect.isNULL() {
 		panic("Rectangle cannot be null.")
 	}
 
-	if r.getDimension() != o.getDimension() {
+	if r.getDimension() != rect.getDimension() {
 		panic("Rectangle dimension is different from current dimension.")
 	}
 
 	// 只要传入的rectangle有一个维度的坐标越界了就不被包含
 	for i := 0; i < r.getDimension(); i++ {
 
-		if o.low.getFloatCoordinate(i) < r.low.getFloatCoordinate(i) ||
-			o.high.getFloatCoordinate(i) > r.high.getFloatCoordinate(i) {
+		if rect.low.getFloatCoordinate(i) < r.low.getFloatCoordinate(i) ||
+			rect.high.getFloatCoordinate(i) > r.high.getFloatCoordinate(i) {
 			return false
 		}
 	}
