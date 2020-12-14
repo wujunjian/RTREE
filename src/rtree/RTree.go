@@ -1,5 +1,9 @@
 package rtree
 
+import (
+	"fmt"
+)
+
 // RTree ...
 type RTree struct {
 	root         IRTNode // 根节点
@@ -150,4 +154,45 @@ func (r RTree) RangeDir(node IRTNode) (leaf []Rectangle) {
 	}
 
 	return
+}
+
+func (r RTree) BFSearch() {
+	var nodeC = make(chan IRTNode, 100)
+
+	nodeC <- r.root
+
+	func() {
+
+		for {
+
+			var node IRTNode
+			select {
+			case node = <-nodeC:
+			default:
+				return
+			}
+
+			if node.isRoot() {
+				fmt.Println("===root===")
+			}
+
+			fmt.Println("---level--- :", node.getLevel())
+			fmt.Println("info:")
+			if node.isLeaf() {
+				for i := 0; i < node.getUsedSpace(); i++ {
+					fmt.Println("leaf:", node.getData(i).toString(),
+						node.getData(i).info.(string))
+				}
+			} else {
+				for i := 0; i < node.getUsedSpace(); i++ {
+					fmt.Println(" dir:", node.getData(i).toString())
+
+					nodeC <- node.getChild(i)
+				}
+
+			}
+		}
+
+	}()
+
 }

@@ -30,6 +30,7 @@ type IRTNode interface {
 	Search(Rectangle) []Rectangle //用于查找
 
 	getUsedSpace() int
+	getLevel() int
 }
 
 // RTNode ...
@@ -50,6 +51,10 @@ func (r *RTNode) init(rtree *RTree, paraent IRTNode, level int) {
 
 	r.datas = make([]Rectangle, r.rtree.getNodeCapacity()+1) // 多出的一个用于节点分裂
 	r.usedSpace = 0
+}
+
+func (r RTNode) getLevel() int {
+	return r.level
 }
 
 func (r RTNode) getUsedSpace() int {
@@ -184,34 +189,27 @@ func (r *RTNode) quadraticSplit(rect Rectangle) [][]int {
 		mask[i] = 1
 	}
 
-	// 分裂后每个组只是有total/2个条目
-	c := total/2 + 1
 	minNodeSize := int(math.Round(float64(r.rtree.getNodeCapacity()) * r.rtree.fillFactor))
+	// fmt.Println("minNodeSize", minNodeSize)
 	if minNodeSize < 2 {
 		minNodeSize = 2
 	}
 	// 记录没有被检查的条目的个数
 	rem := total
 
-	group1 := make([]int, c)
-	group2 := make([]int, c)
-
-	// 跟踪被插入每个组的条目的索引
-	var i1, i2 int
+	var group1, group2 []int
 
 	seed := r.pickSeeds()
-	group1[i1] = seed[0]
+	group1 = append(group1, seed[0])
 	mask[seed[0]] = -1
-	i1++
 
-	group2[i2] = seed[1]
+	group2 = append(group2, seed[1])
 	mask[seed[1]] = -1
-	i2++
 
 	rem -= 2
 
 	for rem > 0 {
-		if minNodeSize-i1 == rem {
+		if minNodeSize-len(group1) == rem {
 			// 将剩余的所有条目全部分配到group1组中，算法终止
 			for i := 0; i < total; i++ {
 				if mask[i] != -1 { // 还没有被分配
@@ -221,7 +219,7 @@ func (r *RTNode) quadraticSplit(rect Rectangle) [][]int {
 				}
 			}
 
-		} else if minNodeSize-i2 == rem {
+		} else if minNodeSize-len(group2) == rem {
 			// 将剩余的所有条目全部分配到group2组中，算法终止
 			for i := 0; i < total; i++ {
 				if mask[i] != -1 { // 还没有被分配
@@ -234,13 +232,13 @@ func (r *RTNode) quadraticSplit(rect Rectangle) [][]int {
 		} else {
 			// 求group1中所有条目的最小外包矩形
 			mbr1 := r.datas[group1[0]].clone()
-			for i := 1; i < i1; i++ {
+			for i := 1; i < len(group1); i++ {
 				mbr1 = mbr1.getUnionRectangle(r.datas[group1[i]])
 			}
 
 			// 求group2中所有条目的外包矩形
 			mbr2 := r.datas[group2[0]].clone()
-			for i := 1; i < i2; i++ {
+			for i := 1; i < len(group2); i++ {
 				mbr2 = mbr2.getUnionRectangle(r.datas[group2[i]])
 			}
 
@@ -265,26 +263,19 @@ func (r *RTNode) quadraticSplit(rect Rectangle) [][]int {
 				}
 			}
 			if areaDiff1 < areaDiff2 { // 先比较面积增量
-				group1[i1] = sel
-				i1++
+				group1 = append(group1, sel)
 			} else if areaDiff1 > areaDiff2 {
-				group2[i2] = sel
-				i2++
+				group2 = append(group2, sel)
 			} else if mbr1.getArea() < mbr2.getArea() { // 再比较自身面积
-				group1[i1] = sel
-				i1++
+				group1 = append(group1, sel)
 			} else if mbr1.getArea() > mbr2.getArea() {
-				group2[i2] = sel
-				i2++
-			} else if i1 < i2 { // 最后比较条目个数
-				group1[i1] = sel
-				i1++
-			} else if i1 > i2 {
-				group2[i2] = sel
-				i2++
+				group2 = append(group2, sel)
+			} else if len(group1) < len(group2) { // 最后比较条目个数
+				group1 = append(group1, sel)
+			} else if len(group1) > len(group2) {
+				group2 = append(group2, sel)
 			} else { //随便
-				group1[i1] = sel
-				i1++
+				group1 = append(group1, sel)
 			}
 			mask[sel] = -1
 			rem--
@@ -325,10 +316,11 @@ func (r RTNode) pickSeeds() []int {
 
 func (r RTNode) getNodeRectangle() Rectangle {
 	if r.usedSpace > 0 {
-		return getUnionRectangle(r.datas)
-	} else {
-		return Rectangle{}
+		return getUnionRectangle(r.datas, r.usedSpace)
+	} else if r.usedSpace == 0 {
+		panic("empty RTNode")
 	}
+	return Rectangle{}
 }
 
 // 步骤CL1：初始化――记R树的根节点为N。

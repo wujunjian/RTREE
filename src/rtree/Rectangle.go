@@ -36,11 +36,15 @@ func (r Rectangle) getHigh() Point {
 	return r.high.clone()
 }
 
+func (r Rectangle) toString() string {
+	return r.low.toString() + ";" + r.high.toString()
+}
+
 func (r Rectangle) getUnionRectangle(in Rectangle) (out Rectangle) {
 
 	//比较一个纬度即可
 	if r.low.getDimension() != in.low.getDimension() {
-		return
+		panic("getUnionRectangle error Dimension")
 	}
 
 	low := r.low.clone()
@@ -155,19 +159,22 @@ func (r Rectangle) equals(o Rectangle) bool {
 	return false
 }
 
-func getUnionRectangle(ins []Rectangle) (out Rectangle) {
+func getUnionRectangle(ins []Rectangle, usedSpace int) (out Rectangle) {
 	if len(ins) == 0 {
 		return
 	}
 
 	for i, r := range ins {
+		if i >= usedSpace {
+			break
+		}
+
 		if i == 0 {
 			out = r.clone()
 			continue
 		}
 
 		out = out.getUnionRectangle(r)
-
 	}
 	return
 }

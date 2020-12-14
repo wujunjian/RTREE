@@ -1,12 +1,23 @@
 package rtree
 
+import (
+	"fmt"
+)
+
 // Point n维空间中的点，所有的维度被存储在一个float数组中
 type Point struct {
 	data []float64
 }
 
-func (p Point) toString() {
+func (p Point) toString() (ret string) {
+	for i, d := range p.data {
+		if i != 0 {
+			ret += ","
+		}
+		ret += fmt.Sprintf("%f", d)
+	}
 
+	return
 }
 
 func (p Point) getDimension() int {
