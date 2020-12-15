@@ -18,7 +18,6 @@ type IRTNode interface {
 	deleteData(int)
 	setDatas(int, Rectangle)
 	getDeleteIndex() int
-	condenseTree(*[]IRTNode)
 	adjustTree(IRTNode, IRTNode)
 	quadraticSplit(Rectangle) [][]int
 	pickSeeds() []int
@@ -30,6 +29,7 @@ type IRTNode interface {
 
 	getUsedSpace() int
 	getLevel() int
+	getTree() *RTree
 }
 
 // RTNode ...
@@ -50,6 +50,10 @@ func (r *RTNode) init(rtree *RTree, paraent IRTNode, level int) {
 
 	r.datas = make([]Rectangle, r.rtree.getNodeCapacity()+1) // 多出的一个用于节点分裂
 	r.usedSpace = 0
+}
+
+func (r RTNode) getTree() *RTree {
+	return r.rtree
 }
 
 func (r RTNode) getLevel() int {
@@ -131,29 +135,30 @@ func (r *RTNode) deleteData(i int) {
 // 如果这个结点的条目数太少下溢， 则删除该结点，同时将该结点中剩余的条目重定位到其他结点中。
 // 如果有必要，要逐级向上进行这种删除，调整向上传递的路径上的所有外包矩形，使其尽可能小，直到根节点。
 // 存储删除结点中剩余条目
-func (r *RTNode) condenseTree(list *[]IRTNode) {
+func condenseTree(r IRTNode, list *[]IRTNode) {
 	if r.isRoot() {
 		// 根节点只有一个条目了，即只有左孩子或者右孩子 ，
 		// 将唯一条目删除，释放根节点，将原根节点唯一的孩子设置为新根节点
-		if !r.isLeaf() && r.usedSpace == 1 {
+		if !r.isLeaf() && r.getUsedSpace() == 1 {
 			child := r.getChild(0)
 
 			child.setParent(nil)
-			r.rtree.setRoot(child)
+			r.getTree().setRoot(child)
+
 		}
 	} else {
 		parent := r.getParent()
-		min := int(math.Round(float64(r.rtree.getNodeCapacity()) * r.rtree.fillFactor))
-		if r.usedSpace < min { //递归的上一次,child进行了删除
+		min := int(math.Round(float64(r.getTree().getNodeCapacity()) * r.getTree().fillFactor))
+		if r.getUsedSpace() < min { //递归的上一次,child进行了删除
 			parent.deleteData(parent.getDeleteIndex()) // 其父节点中删除此条目
 			parent.delChild(parent.getDeleteIndex())
 
-			r.parent = nil
-			*list = append(*list, r) // 之前已经把数据删除了
+			r.setParent(nil)
+			*list = append(*list, IRTNode(r)) // 之前已经把数据删除了
 		} else {
 			parent.setDatas(parent.getDeleteIndex(), r.getNodeRectangle())
 		}
-		parent.condenseTree(list)
+		condenseTree(parent, list)
 	}
 }
 
@@ -337,7 +342,7 @@ func (r RTNode) getNodeRectangle() Rectangle {
 // @return RTDataNode
 func (r RTNode) chooseLeaf(rect Rectangle) *RTDataNode {
 	defer panic("RTNode chooseLeaf will never be called")
-	return &RTDataNode{}
+	return nil
 }
 
 // R树的根节点为T，查找包含rectangle的叶子结点
@@ -349,5 +354,5 @@ func (r RTNode) chooseLeaf(rect Rectangle) *RTDataNode {
 // @return 返回包含rectangle的叶节点
 func (r RTNode) findLeaf(rect Rectangle) *RTDataNode {
 	defer panic("RTNode findLeaf will never be called")
-	return &RTDataNode{}
+	return nil
 }

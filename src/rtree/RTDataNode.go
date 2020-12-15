@@ -95,7 +95,7 @@ func (r *RTDataNode) delete(rect Rectangle) int {
 		if r.datas[i].equals(rect) {
 			r.deleteData(i)
 			var deleteEntriesList []IRTNode
-			r.condenseTree(&deleteEntriesList)
+			condenseTree(r, &deleteEntriesList)
 
 			// 重新插入删除结点中剩余的条目
 			for _, node := range deleteEntriesList {

@@ -141,7 +141,12 @@ func traversePostOrder(node IRTNode) (list []IRTNode) {
 		case *RTDataNode:
 			panic("err type : " + fmt.Sprintf("%v", reflect.TypeOf(node)))
 		default:
-			panic("err type : " + fmt.Sprintf("%v", reflect.TypeOf(node)))
+			panic("err type : " + fmt.Sprintf("%v,%v,%v,%v",
+				reflect.TypeOf(node),
+				node.getLevel(),
+				node.getUsedSpace(),
+				node.isRoot(),
+			))
 		}
 
 		for i := 0; i < node.getUsedSpace(); i++ {
