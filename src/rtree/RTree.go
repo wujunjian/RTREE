@@ -2,6 +2,7 @@ package rtree
 
 import (
 	"fmt"
+	"reflect"
 )
 
 // RTree ...
@@ -127,15 +128,24 @@ func (r RTree) Search(rect Rectangle) []Rectangle {
 	return r.root.Search(rect)
 }
 
-func traversePostOrder(root IRTNode) (list []IRTNode) {
-	if root == nil {
+func traversePostOrder(node IRTNode) (list []IRTNode) {
+	if node == nil {
 		panic("Node cannot be null.")
 	}
-	list = append(list, root)
+	if node.isLeaf() {
+		list = append(list, node)
+	} else if node.isIndex() {
 
-	if !root.isLeaf() {
-		for i := 0; i < root.dataLength(); i++ {
-			list = append(list, traversePostOrder(root.getChild(i))...)
+		switch node.(type) {
+		case *RTDirNode:
+		case *RTDataNode:
+			panic("err type : " + fmt.Sprintf("%v", reflect.TypeOf(node)))
+		default:
+			panic("err type : " + fmt.Sprintf("%v", reflect.TypeOf(node)))
+		}
+
+		for i := 0; i < node.getUsedSpace(); i++ {
+			list = append(list, traversePostOrder(node.getChild(i))...)
 		}
 	}
 

@@ -100,7 +100,7 @@ func (r *RTDataNode) delete(rect Rectangle) int {
 			// 重新插入删除结点中剩余的条目
 			for _, node := range deleteEntriesList {
 				if node.isLeaf() { // 叶子结点，直接把其上的数据重新插入
-					for k := 0; k < node.dataLength(); k++ {
+					for k := 0; k < node.getUsedSpace(); k++ {
 						r.rtree.Insert(node.getData(k))
 					}
 				} else { // 非叶子结点，需要先后序遍历出其上的所有结点
@@ -108,7 +108,7 @@ func (r *RTDataNode) delete(rect Rectangle) int {
 
 					for _, traverseNode := range traverseNodes {
 						if traverseNode.isLeaf() {
-							for t := 0; t < traverseNode.dataLength(); t++ {
+							for t := 0; t < traverseNode.getUsedSpace(); t++ {
 								r.rtree.Insert(traverseNode.getData(t))
 							}
 						}
@@ -124,11 +124,13 @@ func (r *RTDataNode) delete(rect Rectangle) int {
 // @Override
 func (r *RTDataNode) findLeaf(rect Rectangle) *RTDataNode {
 
-	for i, d := range r.datas {
+	for i := 0; i < r.usedSpace; i++ {
+		d := r.getData(i)
 		if d.enclosure(rect) {
 			r.deleteIndex = i
 			return r
 		}
+
 	}
 	return nil
 }

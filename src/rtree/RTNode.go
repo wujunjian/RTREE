@@ -14,7 +14,6 @@ type IRTNode interface {
 	isIndex() bool
 	isLeaf() bool
 	addData(Rectangle)
-	dataLength() int
 	getData(int) Rectangle
 	deleteData(int)
 	setDatas(int, Rectangle)
@@ -72,11 +71,11 @@ func (r RTNode) getDeleteIndex() int {
 }
 
 func (r RTNode) getChild(index int) IRTNode {
-	fmt.Println("RTNode getChild will never be called")
+	defer panic("RTNode getChild will never be called")
 	return nil
 }
 func (r *RTNode) delChild(index int) {
-	fmt.Println("RTNode delChild will never be called")
+	panic("RTNode delChild will never be called")
 }
 
 func (r RTNode) getParent() IRTNode {
@@ -102,9 +101,6 @@ func (r RTNode) isLeaf() bool {
 	return r.level == 0
 }
 
-func (r RTNode) dataLength() int {
-	return len(r.datas)
-}
 func (r RTNode) getData(i int) Rectangle {
 	return r.datas[i]
 }
@@ -148,7 +144,7 @@ func (r *RTNode) condenseTree(list *[]IRTNode) {
 	} else {
 		parent := r.getParent()
 		min := int(math.Round(float64(r.rtree.getNodeCapacity()) * r.rtree.fillFactor))
-		if r.usedSpace < min {
+		if r.usedSpace < min { //递归的上一次,child进行了删除
 			parent.deleteData(parent.getDeleteIndex()) // 其父节点中删除此条目
 			parent.delChild(parent.getDeleteIndex())
 

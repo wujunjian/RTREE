@@ -1,5 +1,9 @@
 package rtree
 
+import (
+	"fmt"
+)
+
 // Rectangle 外接矩形
 type Rectangle struct {
 	low  Point
@@ -122,7 +126,7 @@ func (r Rectangle) enclosure(rect Rectangle) bool {
 	}
 
 	if r.getDimension() != rect.getDimension() {
-		panic("Rectangle dimension is different from current dimension.")
+		panic(fmt.Sprintf("Rectangle dimension is different %d:%d", r.getDimension(), rect.getDimension()))
 	}
 
 	// 只要传入的rectangle有一个维度的坐标越界了就不被包含

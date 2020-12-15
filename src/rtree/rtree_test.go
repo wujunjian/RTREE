@@ -165,7 +165,8 @@ func TestMillion(x *testing.T) {
 	src := rand.NewSource(1)
 
 	r := rand.New(src)
-	itemnum := 1800
+	itemnum := 100000
+	begintime := time.Now()
 	for i := 0; i < itemnum; i++ {
 		lng := math.Mod(r.NormFloat64()*360, 180)
 		lat := math.Mod(r.NormFloat64()*180, 90)
@@ -176,55 +177,55 @@ func TestMillion(x *testing.T) {
 			{lng, lat}}, fmt.Sprintf("%07d", i))
 
 	}
-	fmt.Println("root level", t.root.getLevel())
+	endtime := time.Now()
+	fmt.Println("num", itemnum, "root level", t.root.getLevel(), "create usetime", endtime.Sub(begintime))
 
 	searchRange := []LngLatPoint{
-		{56, 87},
+		{50, 80},
 		{60, 90},
 	}
 
 	searchRange1 := []LngLatPoint{
-		{116, 16},
-		{117, 17},
+		{110, 10},
+		{120, 20},
 	}
-	begintime := time.Now()
+	begintime = time.Now()
 	result := t.SearchCoordinates(searchRange)
-	endtime := time.Now()
-	usetime := endtime.Sub(begintime)
+	endtime = time.Now()
+	fmt.Println("search", CoordinatesToRectangle(searchRange, nil).toString())
+	fmt.Println("result", len(result), "search usetime", endtime.Sub(begintime))
+	fmt.Println()
 
-	fmt.Println("result len", len(result), "usetime", usetime)
-	for _, r := range result {
-		fmt.Println(r.toString(), r.info.(string))
-	}
+	begintime = time.Now()
 	result = t.SearchCoordinates(searchRange1)
-	fmt.Println("result1 len", len(result))
-	for _, r := range result {
-		fmt.Println(r.toString(), r.info.(string))
+	endtime = time.Now()
+	fmt.Println("search", CoordinatesToRectangle(searchRange1, nil).toString())
+	fmt.Println("result", len(result), "search usetime", endtime.Sub(begintime))
+	for _, item := range result {
+		fmt.Println("info:", item.info.(string))
 	}
+	fmt.Println()
 
 	// t.BFSearch()
 	fmt.Println("***************************************")
 	fmt.Println("***************************************")
 	fmt.Println()
-	return
 
+	begintime = time.Now()
 	t.RDelete(result)
-	newresult := t.SearchCoordinates(searchRange)
-
-	fmt.Println("need zero newresult len", len(newresult))
-	for _, r := range newresult {
-		fmt.Println(r.toString(), r.info.(string))
-	}
-
+	endtime = time.Now()
+	newresult := t.SearchCoordinates(searchRange1)
+	fmt.Println("need zero newresult len", len(newresult), "delete usetime", endtime.Sub(begintime))
 	//再次插入
+	begintime = time.Now()
 	for _, item := range result {
+		fmt.Println("insert info", item.info.(string))
 		t.Insert(item)
 	}
+	endtime = time.Now()
+	fmt.Println("insert usetime", endtime.Sub(begintime))
 
-	newresult1 := t.SearchCoordinates(searchRange)
+	newresult1 := t.SearchCoordinates(searchRange1)
 	fmt.Println("newresult1 len", len(newresult1))
-	for _, r := range newresult1 {
-		fmt.Println(r.toString(), r.info.(string))
-	}
 
 }
