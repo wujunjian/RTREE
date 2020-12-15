@@ -55,6 +55,7 @@ func CoordinatesToRectangle(points []LngLatPoint, info interface{}) Rectangle {
 			maxlng = p.Lng
 			minlat = p.Lat
 			maxlat = p.Lat
+			continue
 		}
 		if p.Lng < minlng {
 			minlng = p.Lng
@@ -163,7 +164,7 @@ func (r RTree) RangeDir(node IRTNode) (leaf []Rectangle) {
 }
 
 func (r RTree) BFSearch() {
-	var nodeC = make(chan IRTNode, 100)
+	var nodeC = make(chan IRTNode, 1000000)
 
 	nodeC <- r.root
 

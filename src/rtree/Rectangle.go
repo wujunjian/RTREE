@@ -37,6 +37,7 @@ func (r Rectangle) getHigh() Point {
 }
 
 func (r Rectangle) toString() string {
+
 	return r.low.toString() + ";" + r.high.toString()
 }
 

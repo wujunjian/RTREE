@@ -15,6 +15,19 @@ func (r *RTDirNode) init(rtree *RTree, parent IRTNode, level int) {
 	r.RTNode.init(rtree, parent, level)
 }
 
+func (r *RTDirNode) initRoot(l, ll IRTNode) {
+	r.children[r.usedSpace] = l
+	r.addData(l.getNodeRectangle())
+
+	r.children[r.usedSpace] = ll
+	r.addData(ll.getNodeRectangle())
+
+	l.setParent(r)
+	ll.setParent(r)
+
+	r.rtree.setRoot(r)
+}
+
 //@override
 func (r RTDirNode) Search(rect Rectangle) []Rectangle {
 
@@ -33,7 +46,7 @@ func (r RTDirNode) Search(rect Rectangle) []Rectangle {
 
 //@override
 func (r *RTDirNode) chooseLeaf(rect Rectangle) *RTDataNode {
-	var index int
+	var index int = -1
 
 	switch r.rtree.treeType {
 	case RTREE_LINEAR:
@@ -160,17 +173,8 @@ func (r *RTDirNode) insert(node IRTNode) bool {
 			// 新建根节点，层数加1
 			var newRoot RTDirNode
 			newRoot.init(r.rtree, nil, r.level+1)
+			newRoot.initRoot(n, nn)
 
-			newRoot.children[newRoot.usedSpace] = n
-			newRoot.addData(n.getNodeRectangle())
-
-			newRoot.children[newRoot.usedSpace] = nn
-			newRoot.addData(nn.getNodeRectangle())
-
-			n.setParent(&newRoot)
-			nn.setParent(&newRoot)
-
-			r.rtree.setRoot(&newRoot)
 		} else {
 			r.parent.adjustTree(n, nn)
 		}

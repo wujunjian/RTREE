@@ -31,29 +31,19 @@ func (r *RTDataNode) insert(rect Rectangle) bool {
 
 		if r.isRoot() {
 			// 根节点已满，需要分裂。创建新的根节点
-			var dirNode RTDirNode
-			dirNode.init(r.rtree, nil, r.level+1)
-
-			r.rtree.setRoot(&dirNode)
-			// getNodeRectangle()返回包含结点中所有条目的最小Rectangle
-			dirNode.children[dirNode.usedSpace] = &l
-			dirNode.addData(l.getNodeRectangle())
-
-			dirNode.children[dirNode.usedSpace] = &ll
-			dirNode.addData(ll.getNodeRectangle())
-
-			l.setParent(&dirNode)
-			ll.setParent(&dirNode)
+			var newRoot RTDirNode
+			newRoot.init(r.rtree, nil, r.level+1)
+			newRoot.initRoot(l, ll)
 
 		} else { // 不是根节点
-			r.parent.adjustTree(&l, &ll)
+			r.parent.adjustTree(l, ll)
 		}
 	}
 
 	return true
 }
 
-func (r *RTDataNode) splitLeaf(rect Rectangle) []RTDataNode {
+func (r *RTDataNode) splitLeaf(rect Rectangle) []IRTNode {
 	var group [][]int
 
 	switch r.rtree.treeType {
@@ -85,7 +75,7 @@ func (r *RTDataNode) splitLeaf(rect Rectangle) []RTDataNode {
 		}
 	}
 
-	return []RTDataNode{l, ll}
+	return []IRTNode{&l, &ll}
 }
 
 //@override

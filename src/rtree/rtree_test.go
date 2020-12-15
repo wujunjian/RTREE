@@ -165,14 +165,12 @@ func TestMillion(x *testing.T) {
 	src := rand.NewSource(1)
 
 	r := rand.New(src)
-	itemnum := 1000
+	itemnum := 1800
 	for i := 0; i < itemnum; i++ {
 		lng := math.Mod(r.NormFloat64()*360, 180)
 		lat := math.Mod(r.NormFloat64()*180, 90)
 
-		if i == 3 {
-			fmt.Printf("%07d\t[%11.6f,%11.6f]\n", i, lng, lat)
-		}
+		// fmt.Printf("%07d\t[%11.6f,%11.6f]\n", i, lng, lat)
 
 		t.InsertCoordinates([]LngLatPoint{
 			{lng, lat}}, fmt.Sprintf("%07d", i))
@@ -185,6 +183,10 @@ func TestMillion(x *testing.T) {
 		{60, 90},
 	}
 
+	searchRange1 := []LngLatPoint{
+		{116, 16},
+		{117, 17},
+	}
 	begintime := time.Now()
 	result := t.SearchCoordinates(searchRange)
 	endtime := time.Now()
@@ -194,8 +196,13 @@ func TestMillion(x *testing.T) {
 	for _, r := range result {
 		fmt.Println(r.toString(), r.info.(string))
 	}
+	result = t.SearchCoordinates(searchRange1)
+	fmt.Println("result1 len", len(result))
+	for _, r := range result {
+		fmt.Println(r.toString(), r.info.(string))
+	}
 
-	t.BFSearch()
+	// t.BFSearch()
 	fmt.Println("***************************************")
 	fmt.Println("***************************************")
 	fmt.Println()

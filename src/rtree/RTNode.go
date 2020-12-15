@@ -120,7 +120,6 @@ func (r *RTNode) addData(rect Rectangle) {
 
 	r.datas[r.usedSpace] = rect
 	r.usedSpace++
-
 }
 
 func (r *RTNode) deleteData(i int) {
@@ -166,7 +165,7 @@ func (r *RTNode) condenseTree(list *[]IRTNode) {
 // node1 引起需要调整的孩子结点
 // node2 分裂的结点，若未分裂则为null
 func (r *RTNode) adjustTree(node1 IRTNode, node2 IRTNode) {
-	fmt.Println("RTNode adjustTree will never be called")
+	panic("RTNode adjustTree will never be called")
 }
 
 //
@@ -200,6 +199,7 @@ func (r *RTNode) quadraticSplit(rect Rectangle) [][]int {
 	var group1, group2 []int
 
 	seed := r.pickSeeds()
+
 	group1 = append(group1, seed[0])
 	mask[seed[0]] = -1
 
@@ -295,21 +295,28 @@ func (r *RTNode) quadraticSplit(rect Rectangle) [][]int {
 // 2、Choose the pair with the largest d
 // @return 返回两个条目如果放在一起会有最多的冗余空间的条目索引
 func (r RTNode) pickSeeds() []int {
-	var inefficiency float64 = -1
-	var i1, i2 int
+	var inefficiency float64
+	var i1, i2 int = 0, 1
 
 	for i := 0; i < r.usedSpace; i++ {
 		for j := i + 1; j <= r.usedSpace; j++ {
 			rect := r.datas[i].getUnionRectangle(r.datas[j])
 			d := rect.getArea() - r.datas[i].getArea() - r.datas[j].getArea()
 
+			if i == 0 && j == 1 {
+				inefficiency = d
+				continue
+			}
+
 			if d > inefficiency {
 				inefficiency = d
 				i1 = i
 				i2 = j
 			}
-
 		}
+	}
+	if i1 == i2 {
+		panic("pick seed err")
 	}
 	return []int{i1, i2}
 }
@@ -333,7 +340,7 @@ func (r RTNode) getNodeRectangle() Rectangle {
 // @param Rectangle
 // @return RTDataNode
 func (r RTNode) chooseLeaf(rect Rectangle) *RTDataNode {
-	fmt.Println("RTNode chooseLeaf will never be called")
+	defer panic("RTNode chooseLeaf will never be called")
 	return &RTDataNode{}
 }
 
@@ -345,6 +352,6 @@ func (r RTNode) chooseLeaf(rect Rectangle) *RTDataNode {
 // @param rectangle
 // @return 返回包含rectangle的叶节点
 func (r RTNode) findLeaf(rect Rectangle) *RTDataNode {
-	fmt.Println("RTNode findLeaf will never be called")
+	defer panic("RTNode findLeaf will never be called")
 	return &RTDataNode{}
 }
